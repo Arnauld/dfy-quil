@@ -112,7 +112,8 @@
   {:ship (create-ship)
    :smoke []
    :stars (take 3000 (repeatedly random-star))
-   :planets (take 50 (repeatedly random-planet))})
+   :planets (take 50 (repeatedly random-planet))
+   :paused false})
 
 (defn move-ship [ship]
   (let [speed (+ 1.0 (* 7.0 (:speed ship)))
@@ -151,15 +152,17 @@
   (remove old? smokes))
 
 (defn update-state [state]
+  (if (:paused state)
+    state
   (-> state
       (update-in [:ship] auto-rotate)
-      (update-in [:ship] wiggle-ship)
+      ;(update-in [:ship] wiggle-ship)
       (update-in [:ship] move-ship)
       emit-smoke
       (update-in [:smoke] (fn [smokes] (map age-smoke smokes)))
       (update-in [:smoke] remove-old-smokes)
       (update-in [:planets] #(map auto-rotate %))
-      (update-in [:planets] #(map drift-planet %))))
+      (update-in [:planets] #(map drift-planet %)))))
 
 (defn faster [speed]
   (min 1.0 (+ speed 0.25)))
@@ -168,7 +171,10 @@
   (max 0.0 (- speed 0.25)))
 
 (defn on-key-down [state event]
+  (let [key (:key event)]
+    (println "on-key-down" key))
   (case (:key event)
+    (:p) (update-in state [:paused] not)
     (:w :up) (update-in state [:ship :speed] faster)
     (:s :down) (update-in state [:ship :speed] slower)
     (:a :left) (assoc-in state [:ship :dir-change] -0.15)
