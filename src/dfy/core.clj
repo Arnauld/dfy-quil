@@ -32,7 +32,7 @@
       ; Draw the circle.
       (q/ellipse x y 100 100))))
 
-(q/defsketch dfy-spike-motion-quil
+(q/defsketch dfy
   :title "You spin my circle right round"
   :size [500 500]
   ; setup function called only once, during sketch initialization.
