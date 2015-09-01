@@ -27,17 +27,17 @@
   (q/fill 50 80 50)
   (q/rect -2 0 5 14)
   (q/fill 150 180 150)
-  (q/triangle 0 -10 25 0 0  10)
+  (q/triangle 0 -10 25 0 0 10)
   (q/fill 30 100 30)
   (q/ellipse 8 0 8 8))
 
 (defn create-ship []
-  {:pos [-1000 1000]
-   :dir -0.4
+  {:pos        [-1000 1000]
+   :dir        -0.4
    :dir-change 0.0
-   :speed 0.1
-   :z 1.0
-   :render-fn render-ship})
+   :speed      0.1
+   :z          1.0
+   :render-fn  render-ship})
 
 (defn render-star [star]
   (let [size (:size star)]
@@ -45,10 +45,10 @@
     (q/rect 0 0 size size)))
 
 (defn create-star [pos]
-  {:pos pos
-   :dir (rand q/TWO-PI)
-   :size (+ 1.0 (rand 3.0))
-   :z (rand-between 0.2 0.7)
+  {:pos       pos
+   :dir       (rand q/TWO-PI)
+   :size      (+ 1.0 (rand 3.0))
+   :z         (rand-between 0.2 0.7)
    :render-fn render-star})
 
 (defn random-star []
@@ -62,14 +62,14 @@
     (q/ellipse 0 0 size size)))
 
 (defn create-smoke [[x y]]
-  {:pos [(+ x (rand-between -3 3))
-         (+ y (rand-between -3 3))]
-   :dir 0.0
-   :age 0.0
-   :z 1.0
-   :col [(rand-between 150 255)
-         (rand-between 100 200)
-         (rand-between 0 100)]
+  {:pos       [(+ x (rand-between -3 3))
+               (+ y (rand-between -3 3))]
+   :dir       0.0
+   :age       0.0
+   :z         1.0
+   :col       [(rand-between 150 255)
+               (rand-between 100 200)
+               (rand-between 0 100)]
    :render-fn render-smoke})
 
 (defn render-planet [planet]
@@ -90,15 +90,15 @@
                  (repeatedly #(rand-between 0.5 1.0)))))
 
 (defn create-planet [pos color]
-  {:pos pos
-   :dir (rand q/TWO-PI)
+  {:pos        pos
+   :dir        (rand q/TWO-PI)
    :dir-change (rand-between -0.01 0.01)
-   :size (+ 50.0 (rand 50.0))
-   :drift [(rand-between -0.3 0.3) (rand-between -0.3 0.3)]
-   :color color
-   :z 1.0
-   :rs (generate-radiuses)
-   :render-fn render-planet})
+   :size       (+ 50.0 (rand 50.0))
+   :drift      [(rand-between -0.3 0.3) (rand-between -0.3 0.3)]
+   :color      color
+   :z          1.0
+   :rs         (generate-radiuses)
+   :render-fn  render-planet})
 
 (defn random-planet []
   (create-planet (rand-coord 1000)
@@ -109,11 +109,11 @@
 (defn setup []
   (q/rect-mode :center)
   (q/frame-rate 30)
-  {:ship (create-ship)
-   :smoke []
-   :stars (take 3000 (repeatedly random-star))
+  {:ship    (create-ship)
+   :smoke   []
+   :stars   (take 3000 (repeatedly random-star))
    :planets (take 50 (repeatedly random-planet))
-   :paused false})
+   :paused  false})
 
 (defn move-ship [ship]
   (let [speed (+ 1.0 (* 7.0 (:speed ship)))
@@ -154,15 +154,15 @@
 (defn update-state [state]
   (if (:paused state)
     state
-  (-> state
-      (update-in [:ship] auto-rotate)
-      ;(update-in [:ship] wiggle-ship)
-      (update-in [:ship] move-ship)
-      emit-smoke
-      (update-in [:smoke] (fn [smokes] (map age-smoke smokes)))
-      (update-in [:smoke] remove-old-smokes)
-      (update-in [:planets] #(map auto-rotate %))
-      (update-in [:planets] #(map drift-planet %)))))
+    (-> state
+        (update-in [:ship] auto-rotate)
+        ;(update-in [:ship] wiggle-ship)
+        (update-in [:ship] move-ship)
+        emit-smoke
+        (update-in [:smoke] (fn [smokes] (map age-smoke smokes)))
+        (update-in [:smoke] remove-old-smokes)
+        (update-in [:planets] #(map auto-rotate %))
+        (update-in [:planets] #(map drift-planet %)))))
 
 (defn faster [speed]
   (min 1.0 (+ speed 0.25)))
@@ -207,7 +207,7 @@
       (q/pop-matrix))))
 
 (defn draw-state [state]
-  (q/background (pulse 20 40  15.0)
+  (q/background (pulse 20 40 15.0)
                 (pulse 40 60 40.0)
                 (pulse 50 70 5.0))
   (q/no-stroke)
