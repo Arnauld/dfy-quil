@@ -28,13 +28,25 @@
 (defn translate-v2 [[x y] [dx dy]]
   [(+ x dx) (+ y dy)])
 
-(defn render-ship [ship]
+(defn render-ship0 [ship]
+  ; Magnetoplasmadynamic thruster jet
+  (let [speed (:speed ship)
+        len (* -40 speed)]
+    (when (pos? speed)
+      (q/fill 0 180 250)
+      (q/triangle 0 -5 0 5 len 0)
+      (q/fill 220 220 250)
+      (q/triangle 0 -2 0 2 -15 0)))
+  ; ship
   (q/fill 50 80 50)
   (q/rect -2 0 5 14)
   (q/fill 150 180 150)
   (q/triangle 0 -10 25 0 0 10)
   (q/fill 30 100 30)
   (q/ellipse 8 0 8 8))
+
+(defn render-ship [ship]
+  (render-ship0 ship))
 
 (defn create-ship []
   {:pos        [-1000 1000]
@@ -122,7 +134,7 @@
    :paused  false})
 
 (defn move-ship [ship]
-  (let [speed (+ 1.0 (* 7.0 (:speed ship)))
+  (let [speed (+ 0.0 (* 7.0 (:speed ship)))
         dir (:dir ship)
         dx (* speed (q/cos dir))
         dy (* speed (q/sin dir))]
@@ -162,7 +174,7 @@
     state
     (-> state
         (update-in [:ship] auto-rotate)
-        (update-in [:ship] wiggle-ship)
+        ;(update-in [:ship] wiggle-ship)
         (update-in [:ship] move-ship)
         emit-smoke
         (update-in [:smoke] (fn [smokes] (map age-smoke smokes)))
@@ -220,6 +232,12 @@
     (q/text (str "smoke particles: " nbSmokes) 10 20)
     (q/text (str "speed: " speed) 10 36)))
 
+(defn- draw-smokes [smokes cam-pos]
+  (doseq [smoke smokes]
+    (draw-entity smoke cam-pos)))
+
+(def draw-smoke? false)
+
 (defn draw-state [state]
   (q/background (pulse 20 40 15.0)
                 (pulse 40 60 40.0)
@@ -232,8 +250,8 @@
       (draw-entity star cam-pos))
     (doseq [planet (:planets state)]
       (draw-entity planet cam-pos))
-    (doseq [smoke (:smoke state)]
-      (draw-entity smoke cam-pos))
+    (draw-smokes (if draw-smoke? (:smoke state) []) cam-pos)
+
     (draw-entity (:ship state) cam-pos)
     (draw-stats state)))
 
