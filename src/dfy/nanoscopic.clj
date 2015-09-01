@@ -4,6 +4,11 @@
 
 ;; By Erik Svedäng, Nov 2014
 
+(defn init-text-attrs []
+  (->
+    (q/create-font "Arial" 16 true)
+    (q/text-font 16)))
+
 (defn pulse [low high rate]
   (let [diff (- high low)
         half (/ diff 2)
@@ -109,6 +114,7 @@
 (defn setup []
   (q/rect-mode :center)
   (q/frame-rate 30)
+  (init-text-attrs)
   {:ship    (create-ship)
    :smoke   []
    :stars   (take 3000 (repeatedly random-star))
@@ -156,7 +162,7 @@
     state
     (-> state
         (update-in [:ship] auto-rotate)
-        ;(update-in [:ship] wiggle-ship)
+        (update-in [:ship] wiggle-ship)
         (update-in [:ship] move-ship)
         emit-smoke
         (update-in [:smoke] (fn [smokes] (map age-smoke smokes)))
@@ -172,7 +178,7 @@
 
 (defn on-key-down [state event]
   (let [key (:key event)]
-    (println "on-key-down" key))
+    (println (str "on-key-down >" key "<")))
   (case (:key event)
     (:p) (update-in state [:paused] not)
     (:w :up) (update-in state [:ship :speed] faster)
@@ -206,6 +212,14 @@
       (render-fn entity)
       (q/pop-matrix))))
 
+(defn draw-stats [state]
+  (let [nbSmokes (count (get-in state [:smoke]))
+        speed (get-in state [:ship :speed])]
+    (q/text-align :left)
+    (q/fill 255 255 255)
+    (q/text (str "smoke particles: " nbSmokes) 10 20)
+    (q/text (str "speed: " speed) 10 36)))
+
 (defn draw-state [state]
   (q/background (pulse 20 40 15.0)
                 (pulse 40 60 40.0)
@@ -220,7 +234,8 @@
       (draw-entity planet cam-pos))
     (doseq [smoke (:smoke state)]
       (draw-entity smoke cam-pos))
-    (draw-entity (:ship state) cam-pos)))
+    (draw-entity (:ship state) cam-pos)
+    (draw-stats state)))
 
 (q/defsketch nanoscopic
              :host "canvas"
