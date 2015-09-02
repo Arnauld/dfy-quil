@@ -165,7 +165,8 @@
         dir (:dir ship)
         [vx vy] (:velocity ship)
         invm 0.00005
-        ;; eh!! 0.3 look like light speed :)
+        ;; eh!! 0.3 look like speed of light :)
+        ;; 299 792 458 m / s
         vmax 0.3
         ;;---
         fx (* speed (q/cos dir))
