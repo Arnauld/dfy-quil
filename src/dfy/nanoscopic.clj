@@ -28,7 +28,22 @@
 (defn translate-v2 [[x y] [dx dy]]
   [(+ x dx) (+ y dy)])
 
+(defn draw-axis? [entity]
+  (:draw-axis entity))
+
+(defn draw-axis
+  ([]
+   (draw-axis 100))
+  ([length]
+    ; x red
+   (q/with-stroke [255 40 40]
+                  (q/line 0 0 length 0))
+    ; y green
+   (q/with-stroke [40 255 40]
+                  (q/line 0 0 0 length))))
+
 (defn render-ship0 [ship]
+  (q/stroke 0 0)                                            ; no outline
   ; Magnetoplasmadynamic thruster jet
   (let [speed (:speed ship)
         len (* -40 speed)]
@@ -55,6 +70,7 @@
    :dir-change 0.0
    :speed      0.1
    :z          1.0
+   :draw-axis  true
    :render-fn  render-ship})
 
 (defn render-star [star]
@@ -221,17 +237,26 @@
     (when (on-screen? screen-x screen-y)
       (q/push-matrix)
       (q/translate screen-x screen-y)
+      (if (draw-axis? entity)
+        (draw-axis 100))
       (q/rotate dir)
       (render-fn entity)
       (q/pop-matrix))))
 
+(def RAD-TO-DEG (/ 180 Math/PI))
+(defn rad-to-deg [angle]
+  (mod (int (* RAD-TO-DEG angle)) 360))
+
 (defn draw-stats [state]
   (let [nbSmokes (count (get-in state [:smoke]))
-        speed (get-in state [:ship :speed])]
+        speed (get-in state [:ship :speed])
+        dir (get-in state [:ship :dir])]
     (q/text-align :left)
     (q/fill 255 255 255)
     (q/text (str "smoke particles: " nbSmokes) 10 20)
-    (q/text (str "speed: " speed) 10 36)))
+    (q/text (str "speed: " speed) 10 36)
+    (q/text (str "dir: " (rad-to-deg dir) "°") 10 52)
+    ))
 
 (defn- draw-smokes [smokes cam-pos]
   (doseq [smoke smokes]
