@@ -64,8 +64,10 @@
 (defn render-ship [ship]
   (render-ship0 ship))
 
+(def SHIP-INITIAL-POS [-1000.0 1000.0])
+
 (defn create-ship []
-  {:pos        [-1000.0 1000.0]
+  {:pos        SHIP-INITIAL-POS
    :velocity   [0.0 0.0]
    :dir        -0.4
    :dir-change 0.0
@@ -251,6 +253,7 @@
   (let [key (:key event)]
     (println (str "on-key-down >" key "<")))
   (case (:key event)
+    (:r) (assoc-in state [:ship :pos] SHIP-INITIAL-POS)
     (:p) (update-in state [:paused] not)
     (:w :up) (update-in state [:ship :speed] faster)
     (:s :down) (update-in state [:ship :speed] slower)
