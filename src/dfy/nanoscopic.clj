@@ -65,10 +65,11 @@
   (render-ship0 ship))
 
 (defn create-ship []
-  {:pos        [-1000 1000]
+  {:pos        [-1000.0 1000.0]
+   :velocity   [0.0 0.0]
    :dir        -0.4
    :dir-change 0.0
-   :speed      0.1
+   :speed      0.0
    :z          1.0
    :draw-axis  true
    :render-fn  render-ship})
@@ -150,12 +151,38 @@
    :planets (take 50 (repeatedly random-planet))
    :paused  false})
 
-(defn move-ship [ship]
+
+(defn move-ship
+  " m.a = ∑ f = m.dv/dt
+    dv = (∑ f).(1/m).dt
+    u_1 = u_0 + du = u_0 + (v_0 + dv).dt
+
+    dx = (vx + dvx).dt
+
+  "
+  [ship dt]
   (let [speed (+ 0.0 (* 7.0 (:speed ship)))
         dir (:dir ship)
-        dx (* speed (q/cos dir))
-        dy (* speed (q/sin dir))]
-    (update-in ship [:pos] translate-v2 [dx dy])))
+        [vx vy] (:velocity ship)
+        invm 0.00005
+        ;;---
+        fx (* speed (q/cos dir))
+        fy (* speed (q/sin dir))
+        dvx (* fx invm dt)
+        dvy (* fy invm dt)
+        nvx (+ vx dvx)
+        nvy (+ vy dvy)
+        normalizer (Math/sqrt (+ (* nvx nvx) (* nvy nvy)))
+        normalizer (if (< 0.25 normalizer)
+                     (/ 0.25 normalizer)
+                     1)
+        nvx (* nvx normalizer)
+        nvy (* nvy normalizer)
+        dx (* nvx dt)
+        dy (* nvy dt)]
+    (-> ship
+        (assoc :velocity [nvx nvy])
+        (update-in [:pos] translate-v2 [dx dy]))))
 
 (defn auto-rotate [entity]
   (let [dir-change (:dir-change entity)]
@@ -186,18 +213,26 @@
 (defn remove-old-smokes [smokes]
   (remove old? smokes))
 
+(defn remember-last-tick [state]
+  (assoc state :lastTick (q/millis)))
+
+(defn last-tick [state]
+  (get state :lastTick (q/millis)))
+
 (defn update-state [state]
   (if (:paused state)
-    state
-    (-> state
-        (update-in [:ship] auto-rotate)
-        ;(update-in [:ship] wiggle-ship)
-        (update-in [:ship] move-ship)
-        emit-smoke
-        (update-in [:smoke] (fn [smokes] (map age-smoke smokes)))
-        (update-in [:smoke] remove-old-smokes)
-        (update-in [:planets] #(map auto-rotate %))
-        (update-in [:planets] #(map drift-planet %)))))
+    (remember-last-tick state)
+    (let [dt (- (q/millis) (last-tick state))]
+      (-> state
+          (update-in [:ship] auto-rotate)
+          ;(update-in [:ship] wiggle-ship)
+          (update-in [:ship] move-ship dt)
+          emit-smoke
+          (update-in [:smoke] (fn [smokes] (map age-smoke smokes)))
+          (update-in [:smoke] remove-old-smokes)
+          (update-in [:planets] #(map auto-rotate %))
+          (update-in [:planets] #(map drift-planet %))
+          (remember-last-tick)))))
 
 (defn faster [speed]
   (min 1.0 (+ speed 0.25)))
@@ -250,19 +285,24 @@
 (defn draw-stats [state]
   (let [nbSmokes (count (get-in state [:smoke]))
         speed (get-in state [:ship :speed])
-        dir (get-in state [:ship :dir])]
+        dir (get-in state [:ship :dir])
+        [vx vy] (get-in state [:ship :velocity])
+        nv (+ (* vx vx) (* vy vy))
+        [px py] (get-in state [:ship :pos])]
     (q/text-align :left)
     (q/fill 255 255 255)
     (q/text (str "smoke particles: " nbSmokes) 10 20)
     (q/text (str "speed: " speed) 10 36)
     (q/text (str "dir: " (rad-to-deg dir) "°") 10 52)
+    (q/text (format "v: %.5f, %.5f (%.5f)" vx vy nv) 10 68)
+    (q/text (format "p: %.1f, %.1f" px py) 10 84)
     ))
 
 (defn- draw-smokes [smokes cam-pos]
   (doseq [smoke smokes]
     (draw-entity smoke cam-pos)))
 
-(def draw-smoke? false)
+(def draw-smoke? true)
 
 (defn draw-state [state]
   (q/background (pulse 20 40 15.0)
