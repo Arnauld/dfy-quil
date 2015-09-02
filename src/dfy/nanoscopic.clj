@@ -35,8 +35,9 @@
     (when (pos? speed)
       (q/fill 0 180 250)
       (q/triangle 0 -5 0 5 len 0)
-      (q/fill 220 220 250)
-      (q/triangle 0 -2 0 2 -15 0)))
+      (when (< 0.5 speed)
+        (q/fill 220 220 250)
+        (q/triangle 0 -2 0 2 -15 0))))
   ; ship
   (q/fill 50 80 50)
   (q/rect -2 0 5 14)
