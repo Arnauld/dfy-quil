@@ -165,6 +165,8 @@
         dir (:dir ship)
         [vx vy] (:velocity ship)
         invm 0.00005
+        ;; eh!! 0.3 look like light speed :)
+        vmax 0.3
         ;;---
         fx (* speed (q/cos dir))
         fy (* speed (q/sin dir))
@@ -172,12 +174,16 @@
         dvy (* fy invm dt)
         nvx (+ vx dvx)
         nvy (+ vy dvy)
-        normalizer (Math/sqrt (+ (* nvx nvx) (* nvy nvy)))
-        normalizer (if (< 0.25 normalizer)
-                     (/ 0.25 normalizer)
+        ; make sure velocity is not too big,
+        ; not sure newton would agree but otherwise
+        ; the ship's velocity always increase...
+        ; faster than light?
+        vnorm (Math/sqrt (+ (* nvx nvx) (* nvy nvy)))
+        vadju (if (< vmax vnorm)
+                     (/ vmax vnorm)
                      1)
-        nvx (* nvx normalizer)
-        nvy (* nvy normalizer)
+        nvx (* nvx vadju)
+        nvy (* nvy vadju)
         dx (* nvx dt)
         dy (* nvy dt)]
     (-> ship
@@ -287,7 +293,7 @@
         speed (get-in state [:ship :speed])
         dir (get-in state [:ship :dir])
         [vx vy] (get-in state [:ship :velocity])
-        nv (+ (* vx vx) (* vy vy))
+        nv (Math/sqrt (+ (* vx vx) (* vy vy)))
         [px py] (get-in state [:ship :pos])]
     (q/text-align :left)
     (q/fill 255 255 255)
